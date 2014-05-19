@@ -25,7 +25,6 @@ type 1: 2-way pseudo-associative cache
 type 2: 8-way set-associative cache
 */
 void *createAndInitialize(int blocksize, int cachesize, int type) {
-  //printf("print1 \n");
   int blocks = cachesize/blocksize;
   // mem for cache array
   struct cache *cachey=malloc(sizeof(struct block) * blocks + sizeof(struct cache));
@@ -35,16 +34,13 @@ void *createAndInitialize(int blocksize, int cachesize, int type) {
 
 
   // create default array w/ 0 for all values
-  //printf("print2 \n");
   struct block generic;
   generic.valid = 0;
   generic.tag = 0;
   int i;
-  //printf("print3 \n");
   for (i=0; i<blocks; i++) {
     cachey->cacheArr[i] = generic;
   }
-  //printf("print4 \n");
   return cachey;
 }
 
@@ -72,8 +68,8 @@ int power(int base, int exp) {
 // if it is a miss, return 0.
 int accessCache(void *cache, int address) {
   accesscount++;
+  accesstime++;
   struct cache *cachey = cache;
-  //printf( "print5 \n" );
   // calculate # of bits of address are tag,
   //  set index, and block offset
   int blocks = (cachey->cachesize)/(cachey->blocksize);
@@ -88,7 +84,6 @@ int accessCache(void *cache, int address) {
 
   // tag and valid will be inserted to block
   int tag = address > (indexsize + blockoffsetsize);
-  //printf( "print5.32 \n" );
   int valid = 1;
 
   // miss
@@ -96,7 +91,6 @@ int accessCache(void *cache, int address) {
   int validtest = cachey->cacheArr[index].valid;
   //if ((cachey->cacheArr[index]).valid == 0) {
   if (validtest == 0) {
-    //printf( "print7 \n" );
     misscount++;
     accesstime = accesstime + 100;
     //cachey->cacheArr[index] = *entry;
@@ -105,13 +99,8 @@ int accessCache(void *cache, int address) {
     return 0;
   }
   // hit
-  //printf( "print8 \n" );
-  accesstime++;
-  //printf( "print9 \n" );
   cachey->cacheArr[index].valid = valid;
-  //printf( "print9.1 \n" );
   cachey->cacheArr[index].tag = tag;
-  //printf( "print9.2 \n" );
   return 1;
 }
 
