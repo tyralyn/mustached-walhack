@@ -122,15 +122,16 @@ int accessCache(void *cache, int address) {
     }
     else {
       if (tag == cachey->cacheArr[index].tag) {
+	return 1;
       }
       else {
 	misscount++;
 	accesstime = accesstime+100;
 	cachey->cacheArr[index].valid = valid;
 	cachey->cacheArr[index].tag = tag;
+	return 0;
       }
     }
-    return 1;
   }
   //printf("index if direct mapped %d\n", index);
   else if (cachey->type ==1) {
