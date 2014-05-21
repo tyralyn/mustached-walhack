@@ -54,6 +54,7 @@ void *createAndInitialize(int blocksize, int cachesize, int type) {
     cachey->cacheArr[i].index = index;
     indexindex = i % cachey->associativity;
     cachey->cacheArr[i].indexindex = indexindex;
+    cachey->cacheArr[i].valid = 0;//indexindex;
     index = (int)i/cachey->associativity;
   }
     return cachey;
@@ -83,39 +84,25 @@ int power(int base, int exp) {
 // if it is a miss, return 0.
 int accessCache(void *cache, int address) {
   accesscount++;
-  /* accesstime++; */
+  accesstime++;
   struct cache *cachey = cache;
-  // calculate # of bits of address are tag,
-  //  set index, and block offset
   int blocks = cachey->numblocks;
   int associativity = cachey->associativity;
-  //if (cachey->type == 0) {
 
-  int indexsize = log_2((int)blocks/associativity);
-  int blockoffsetsize = log_2(cachey->blocksize);
-  int tagsize = 32-blockoffsetsize-indexsize;
-  
-  // shift and mask to find index, valid, tag
-  int index = address >> blockoffsetsize;
-  int mask = (power(indexsize, 2)-1);
-  index = index & mask;
+  int offsetbits = log_2(blocks);
+  int indexbits = log_2(blocks/associativity);
+  int tag = address >> (indexbits + offsetbits);
+  int index = (address >> offsetbits) & ((1 << indexbits) - 1);
+  int offset = address & ((1<<offsetbits)-1);
 
-  // tag and valid will be inserted to block
-  int tag = address > (indexsize + blockoffsetsize);
   int valid = 1;
-  //printf("index if direct mapped %d\n", index);
-  // miss
-  //struct block *test = &cachey->cacheArr[index];
-  //int validtest = cachey->cacheArr[index].valid;
-  //if ((cachey->cacheArr[index]).valid == 0) { 
-
+  //printf("address %d %d index valid %d %d\n", address, index, cachey->cacheArr[index].valid, valid);
   if (cachey->type == 0) { 
-    accesstime++;  
     int validtest = cachey->cacheArr[index].valid;
     if (validtest == 0) {
+      //printf("fail %d \n", address);
       misscount++;
-      accesstime = accesstime + 100;
-      //cachey->cacheArr[index] = *entry;
+      accesstime = accesstime + 101;
       cachey->cacheArr[index].valid = valid;
       cachey->cacheArr[index].tag = tag;
       return 0;
@@ -125,14 +112,16 @@ int accessCache(void *cache, int address) {
 	return 1;
       }
       else {
+	//printf("fail2 %d \n", address);
 	misscount++;
-	accesstime = accesstime+100;
+	accesstime = accesstime+101;
 	cachey->cacheArr[index].valid = valid;
 	cachey->cacheArr[index].tag = tag;
 	return 0;
       }
     }
-  }
+    return 1;
+  }/*
   //printf("index if direct mapped %d\n", index);
   else if (cachey->type ==1) {
     accesstime++;
@@ -140,16 +129,20 @@ int accessCache(void *cache, int address) {
     //printf("index if 2way %d\n", f);
     int validtest = cachey->cacheArr[firstBlock].valid;
     int validtest2= cachey->cacheArr[firstBlock+1].valid;
-    if (validtest==0) {
-      if (validtest2==0) {
-	misscount++;
-	accesstime = accesstime+100;
-	cachey->cacheArr[firstBlock+1].valid = cachey->cacheArr[firstBlock].valid;
-	cachey->cacheArr[firstBlock+1].tag=cachey->cacheArr[firstBlock].tag;
-	cachey->cacheArr[firstBlock].valid = valid;
-	cachey->cacheArr[firstBlock].tag=tag;
-	return 0;
-      }
+    if (validtest == 0 && validtest2 ==0) {
+
+      misscount++;
+      accesstime = accesstime+100;
+      cachey->cacheArr[firstBlock+1].valid = cachey->cacheArr[firstBlock].valid;
+      cachey->cacheArr[firstBlock+1].tag=cachey->cacheArr[firstBlock].tag;
+      cachey->cacheArr[firstBlock].valid = valid;
+      cachey->cacheArr[firstBlock].tag=tag;
+      return 0;
+    }
+    else if (validtest==1 && validtest2 ==1) {
+      
+    }
+    /* }
       int validHold = cachey->cacheArr[firstBlock+1].valid;
       int tagHold = cachey->cacheArr[firstBlock+1].tag;
       cachey->cacheArr[firstBlock+1].valid = cachey->cacheArr[firstBlock].valid;
@@ -157,13 +150,13 @@ int accessCache(void *cache, int address) {
       cachey->cacheArr[firstBlock].valid = validHold;
       cachey->cacheArr[firstBlock].tag=tagHold;
       //accesstime++; 
-      return 1;
-    }
+      return 1;*/
+   // }
     //accesstime++; 
-    cachey->cacheArr[firstBlock].valid = valid;
-    cachey->cacheArr[firstBlock].tag = tag;
-    return 1;
-  }
+  // cachey->cacheArr[firstBlock].valid = valid;
+  //cachey->cacheArr[firstBlock].tag = tag;
+  // return 1;
+  //}
 }
 
 // returns # of misses that have occurred so far
